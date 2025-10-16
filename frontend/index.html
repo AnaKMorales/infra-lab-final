@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8" />
+<title>Registro de Usuarios</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  body { font-family: system-ui, Arial; max-width: 720px; margin: 24px auto; }
+  form, ul { margin-top: 16px; }
+  input, button { padding: 8px; margin-right: 8px; }
+  li { margin: 6px 0 }
+  .success { color: green; margin-top: 10px; }
+  .error { color: red; margin-top: 10px; }
+</style>
+
+<h1>Usuarios</h1>
+
+<form id="f">
+  <input name="name" placeholder="Nombre" required />
+  <input name="email" type="email" placeholder="Email" required />
+  <input name="phone" placeholder="Teléfono" required />
+  <button>Crear</button>
+</form>
+
+<div id="message"></div>
+
+<ul id="list"></ul>
+
+<script>
+// CORRECCIÓN: Usar las URLs correctas de nuestra API
+const API_BASE = "http://127.0.0.1:8000/api";
+const CREATE_USER_URL = API_BASE + "/users/";
+const LIST_USERS_URL = API_BASE + "/users/list/";
+
+async function cargar() {
+  try {
+    const r = await fetch(LIST_USERS_URL);
+    const data = await r.json();
+    
+    if (data.length === 0) {
+      document.getElementById("list").innerHTML = "<li>No hay usuarios registrados</li>";
+      return;
+    }
+    
+    document.getElementById("list").innerHTML =
+      data.map(u => `<li><strong>${u.name}</strong> — ${u.email} — ${u.phone}</li>`).join("");
+  } catch (error) {
+    console.error("Error cargando usuarios:", error);
+    document.getElementById("list").innerHTML = "<li>Error cargando usuarios</li>";
+  }
+}
+
+document.getElementById("f").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const body = JSON.stringify(Object.fromEntries(fd.entries()));
+  
+  try {
+    const response = await fetch(CREATE_USER_URL, { 
+      method: "POST", 
+      headers: { "Content-Type": "application/json" }, 
+      body 
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok) {
+      document.getElementById("message").innerHTML = 
+        `<p class="success">✅ Usuario creado exitosamente! Se envió notificación por email.</p>`;
+      e.target.reset();
+      cargar();
+    } else {
+      document.getElementById("message").innerHTML = 
+        `<p class="error">❌ Error: ${result.error}</p>`;
+    }
+  } catch (error) {
+    document.getElementById("message").innerHTML = 
+      `<p class="error">❌ Error de conexión: ${error.message}</p>`;
+  }
+  
+  // Limpiar mensaje después de 5 segundos
+  setTimeout(() => {
+    document.getElementById("message").innerHTML = '';
+  }, 5000);
+});
+
+cargar();
+</script>
