@@ -1,3 +1,4 @@
+import requests
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -10,6 +11,7 @@ from .email_service import send_notification_email
 def create_user(request):
     """
     Endpoint para crear un nuevo usuario
+    Ahora se comunica con el notification-service
     """
     try:
         # Leer datos del request
@@ -36,11 +38,33 @@ def create_user(request):
         
         print(f"✅ Usuario creado: {user.name} ({user.email})")
         
-        # Enviar notificación por email (no bloqueante)
+        # 🎯 NUEVO: Llamar al microservicio de notificaciones
         try:
-            send_notification_email(user)
-        except Exception as e:
-            print(f"⚠️ Email falló pero usuario fue creado: {e}")
+            notification_data = {
+                'name': user.name,
+                'email': user.email, 
+                'phone': user.phone,
+                'created_at': user.created_at.isoformat()
+            }
+            
+            # URL del notification-service (en K8s será: http://notification-service:5000)
+            notification_url = "http://localhost:5000/notify"
+            
+            response = requests.post(
+                notification_url,
+                json=notification_data,
+                headers={'Content-Type': 'application/json'},
+                timeout=5  # Timeout de 5 segundos
+            )
+            
+            if response.status_code == 200:
+                print("✅ Notificación enviada al microservicio")
+            else:
+                print(f"⚠️ Microservicio respondió con error: {response.status_code}")
+                
+        except requests.exceptions.RequestException as e:
+            print(f"⚠️ Error comunicando con notification-service: {e}")
+            # No fallar la aplicación principal si el microservicio falla
         
         # Devolver respuesta exitosa
         return JsonResponse({
