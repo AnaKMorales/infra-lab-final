@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: user-registration
+data:
+  DATABASE_URL: "sqlite:///db.sqlite3"
+  NOTIFICATION_SERVICE_URL: "http://notification-service:5000"
+  DEBUG: "True"
