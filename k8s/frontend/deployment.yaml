@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: frontend:latest        # Cambiar por tu imagen ECR luego
+        image: 686827201478.dkr.ecr.us-east-1.amazonaws.com/frontend:latest        # Cambiar por tu imagen ECR luego
         ports:
         - containerPort: 80
         resources:

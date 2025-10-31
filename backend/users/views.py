@@ -48,7 +48,7 @@ def create_user(request):
             }
             
             # URL del notification-service (en K8s será: http://notification-service:5000)
-            notification_url = "http://localhost:5000/notify"
+            notification_url = "http://notification-service:5000/notify"
             
             response = requests.post(
                 notification_url,
